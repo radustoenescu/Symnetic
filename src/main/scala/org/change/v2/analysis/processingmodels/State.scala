@@ -13,15 +13,29 @@ import org.change.v2.analysis.memory.Tag
 /**
  * Author: Radu Stoenescu
  * Don't be a stranger,  symnetic.7.radustoe@spamgourmet.com
+ *
+ * A state is a symbolic execution path.
+ *
+ * @param memory Current memory state.
+ * @param history A history of what elements were explored.
+ * @param errorCause If a state failed, the cause is explained.
+ * @param instructionHistory A complete sequence of the instructions that led to this state.
+ * @param invariantChecks Installed whenever an invariant is to be checked.
  */
 case class State(memory: MemorySpace = MemorySpace.clean,
                  history: List[LocationId] = Nil,
                  errorCause: Option[ErrorCause] = None,
-                 instructionHistory: List[Instruction] = Nil) {
+                 instructionHistory: List[Instruction] = Nil,
+                 invariantChecks: List[Instruction] = Nil) {
+
   def location: LocationId = history.head
+
   def forwardTo(locationId: LocationId): State = State(memory, locationId :: history, errorCause, instructionHistory)
+
   def status = errorCause.getOrElse("OK")
+
   override def toString = s"Path ($status) {\n$memory\n} End Of Path Desc"
+
   def addInstructionToHistory(i: Instruction) = State(memory, history, errorCause, i :: instructionHistory)
 }
 
