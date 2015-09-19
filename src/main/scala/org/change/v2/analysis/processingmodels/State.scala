@@ -20,13 +20,13 @@ import org.change.v2.analysis.memory.Tag
  * @param history A history of what elements were explored.
  * @param errorCause If a state failed, the cause is explained.
  * @param instructionHistory A complete sequence of the instructions that led to this state.
- * @param invariantChecks Installed whenever an invariant is to be checked.
+ * @param perStateInstructions Installed whenever an invariant is to be checked.
  */
 case class State(memory: MemorySpace = MemorySpace.clean,
                  history: List[LocationId] = Nil,
                  errorCause: Option[ErrorCause] = None,
                  instructionHistory: List[Instruction] = Nil,
-                 invariantChecks: List[Instruction] = Nil) {
+                 perStateInstructions: Map[LocationId, Instruction] = Map.empty) {
 
   def location: LocationId = history.head
 
@@ -37,6 +37,31 @@ case class State(memory: MemorySpace = MemorySpace.clean,
   override def toString = s"Path ($status) {\n$memory\n} End Of Path Desc"
 
   def addInstructionToHistory(i: Instruction) = State(memory, history, errorCause, i :: instructionHistory)
+
+  def eliminatePerStateInstructions(whatInstructions: Iterable[LocationId]): State = State(
+    memory,
+    history,
+    errorCause,
+    instructionHistory,
+    perStateInstructions -- whatInstructions
+  )
+
+  def addPerStateInstruction(li: (LocationId, Instruction)) = State (
+    memory,
+    history,
+    errorCause,
+    instructionHistory,
+    perStateInstructions + li
+  )
+
+  def executePerStateInstructions(verbose: Boolean = true): (List[State], List[State]) = {
+    val (toExecute, toPostpone) = perStateInstructions.partition(_._1 == location)
+    val (ok, failed) = InstructionBlock(
+      toExecute.values
+    )(this, verbose)
+
+    (ok.map(_.eliminatePerStateInstructions(toExecute.keys)), failed)
+  }
 }
 
 object State {

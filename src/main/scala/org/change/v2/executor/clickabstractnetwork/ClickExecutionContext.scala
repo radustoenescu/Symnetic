@@ -4,10 +4,13 @@ import org.change.symbolicexec.verification.Rule
 import org.change.v2.abstractnet.generic.NetworkConfig
 import org.change.v2.analysis.processingmodels.instructions.InstructionBlock
 import org.change.v2.analysis.processingmodels.{LocationId, Instruction, State}
+import org.change.v2.executor.clickabstractnetwork.ClickExecutionContext.{InvariantCheck, SnapshotInstruction}
 import org.change.v2.executor.clickabstractnetwork.verificator.PathLocation
 
+import scala.annotation.tailrec
+
 /**
- * Author: Radu Stoenescu
+  * Author: Radu Stoenescu
  * Don't be a stranger,  symnetic.7.radustoe@spamgourmet.com
  *
  * An execution context is determined by the instructions it can execute and
@@ -17,12 +20,13 @@ import org.change.v2.executor.clickabstractnetwork.verificator.PathLocation
  *
  */
 class ClickExecutionContext(
-                           val instructions: Map[LocationId, Instruction],
-                           val links: Map[LocationId, LocationId],
-                           val okStates: List[State],
-                           val failedStates: List[State],
-                           val stuckStates: List[State],
-                           val checkInstructions: Map[LocationId, Instruction] = Map.empty
+   val instructions: Map[LocationId, Instruction],
+   val links: Map[LocationId, LocationId],
+   val okStates: List[State],
+   val failedStates: List[State],
+   val stuckStates: List[State],
+   val checkInstructions: Map[LocationId, Instruction] = Map.empty,
+   val checkInvariantInstructions: Map[LocationId, (SnapshotInstruction, InvariantCheck)] = Map.empty
 ) {
 
   def +(that: ClickExecutionContext) = new ClickExecutionContext(
@@ -33,6 +37,8 @@ class ClickExecutionContext(
     this.stuckStates ++ that.stuckStates,
     this.checkInstructions ++ that.checkInstructions
   )
+
+  @tailrec final def runUntilDone: ClickExecutionContext = if (isDone) this else execute().runUntilDone
 
   def isDone: Boolean = okStates.isEmpty
 
@@ -47,11 +53,21 @@ class ClickExecutionContext(
     } yield {
         if (instructions contains stateLocation) {
 //          Apply instructions
-          val r1 = instructions(stateLocation)(s, verbose)
+          val afterProcessing = instructions(stateLocation)(s, verbose)
+
+//          Install invariant instructions
+
 //          Apply check instructions on output ports
-          val (toCheck, r2) = r1._1.partition(s => checkInstructions.contains(s.location))
-          val r3 = toCheck.map(s => checkInstructions(s.location)(s,verbose)).unzip
-          (r2 ++ r3._1.flatten, r1._2 ++ r3._2.flatten, Nil)
+          val (needChecks, needNotChecks) = afterProcessing._1.partition(s => checkInstructions.contains(s.location))
+          val afterChecks = needChecks.map(s => checkInstructions(s.location)(s,verbose)).unzip
+
+          val okAfterChecks = needNotChecks ++ afterChecks._1.flatten
+          val failedAfterChecks = afterProcessing._2 ++ afterChecks._2.flatten
+
+//          Apply invariant checks
+          val (okAfterInvs, failedAfterInvs) = okAfterChecks.map(_.executePerStateInstructions(verbose)).unzip
+
+          (okAfterInvs.flatten, failedAfterChecks ++ failedAfterInvs.flatten, Nil)
         } else
           (Nil, Nil, List(s))
       }).unzip3
@@ -115,6 +131,28 @@ class ClickExecutionContext(
 }
 
 object ClickExecutionContext {
+
+  def clean(
+    instructions: Map[LocationId, Instruction] = Map.empty,
+    links: Map[LocationId, LocationId] = Map.empty,
+    okStates: List[State] = Nil,
+    failedStates: List[State] = Nil,
+    stuckStates: List[State] = Nil,
+    checkInstructions: Map[LocationId, Instruction] = Map.empty,
+    checkInvariantInstructions: Map[LocationId, (SnapshotInstruction, InvariantCheck)] = Map.empty
+  ): ClickExecutionContext = new ClickExecutionContext(
+    instructions,
+    links,
+    okStates,
+    failedStates,
+    stuckStates,
+    checkInstructions,
+    checkInvariantInstructions
+  )
+
+  type SnapshotInstruction = Instruction
+  type CheckSnapshotInstruction = Instruction
+  type InvariantCheck = (LocationId, CheckSnapshotInstruction)
 
   /**
    * Builds a symbolic execution context out of a single click config file.

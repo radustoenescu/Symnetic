@@ -6,7 +6,7 @@ import org.change.v2.analysis.processingmodels.{State, Instruction}
  * Author: Radu Stoenescu
  * Don't be a stranger,  symnetic.7.radustoe@spamgourmet.com
  */
-case class InstructionBlock(instructions: List[Instruction]) extends Instruction {
+case class InstructionBlock(instructions: Iterable[Instruction]) extends Instruction {
   /**
    * A state processing block produces a set of new states based on a previous one.
    *
@@ -25,5 +25,5 @@ case class InstructionBlock(instructions: List[Instruction]) extends Instruction
 }
 
 object InstructionBlock {
-  def apply(instrs: Instruction*): InstructionBlock = InstructionBlock(instrs.toList)
+  def apply(instrs: Instruction*): InstructionBlock = InstructionBlock(instrs)
 }
