@@ -192,4 +192,9 @@ case class NetworkConfig(
       case None => this
     }
   }
-  }
+
+//  def augmentWithPrefix(): NetworkConfig = NetworkConfig(
+//    id,
+//
+//  )
+}
