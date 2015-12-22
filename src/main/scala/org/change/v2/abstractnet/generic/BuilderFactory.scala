@@ -1,6 +1,6 @@
 package org.change.v2.abstractnet.generic
 
-import org.change.v2.Template
+import org.change.v2.{ARPResponder, Template}
 import org.change.v2.abstractnet.click.sefl._
 
 object BuilderFactory {
@@ -44,6 +44,7 @@ object BuilderFactory {
     //    case "IPFilter"  => IPFilter.getBuilder(nameValue)
     case "Paint" => Paint.getBuilder(nameValue)
     case "LinearIPLookup" => LinearIPLookup.getBuilder(nameValue)
+    case "ARPResponder" => ARPResponder.getBuilder(nameValue)
     case _ => NoOpClickElm.getBuilder(nameValue, elementType)
   }
   def getBuilder(elementType: String) = elementType match {
@@ -85,6 +86,7 @@ object BuilderFactory {
 //    case "IPFilter"  => IPFilter.getBuilder
     case "Paint"  => Paint.getBuilder
     case "LinearIPLookup" => LinearIPLookup.getBuilder
+    case "ARPResponder" => ARPResponder.getBuilder
     case _ => NoOpClickElm.getBuilder(elementType)
   }
 }

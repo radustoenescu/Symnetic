@@ -1,0 +1,1 @@
+FromDevice() -> t  :: ARPResponder(127.0.0.1, 255.255.255.0, aa:aa:aa:aa:aa:aa, 192.168.0.0, 255.255.0.0, bb:bb:bb:bb:bb:bb,  192.168.0.0, 255.255.0.0, bb:bb:bb:bb:bb:bb) -> ToDevice()
