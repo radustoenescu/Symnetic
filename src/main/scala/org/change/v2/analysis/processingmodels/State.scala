@@ -34,8 +34,20 @@ object State {
 
    val afterBigBang = InstructionBlock (
      CreateTag("START",0),
+     CreateTag("L2", -144),
      CreateTag("L3", 0),
 
+     //L2
+     Allocate(EtherDst, 48),
+     Assign(EtherDst, SymbolicValue()),
+
+     Allocate(EtherSrc, 48),
+     Assign(EtherSrc, SymbolicValue()),
+
+     Allocate(EtherType, 16),
+     Assign(EtherType, SymbolicValue()),
+
+     //L3
      Allocate(IPVersion, 4),
      Assign(IPVersion, SymbolicValue()),
 
