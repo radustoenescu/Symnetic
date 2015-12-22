@@ -57,7 +57,7 @@ package object canonicalnames {
   val IPFlagsOffset = 48
   val IPFlags = L3Tag + IPFlagsOffset
   val FragmentOffsetOffset = 51
-  val FragmentOfset = L3Tag + FragmentOffsetOffset
+  val FragmentOffset = L3Tag + FragmentOffsetOffset
   val TTLOffset = 64
   val TTL = L3Tag + TTLOffset
   val ProtoOffset = 72
