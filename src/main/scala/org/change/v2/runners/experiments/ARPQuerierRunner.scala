@@ -3,7 +3,7 @@ package org.change.v2.runners.experiments
 import java.io.{File, FileOutputStream, PrintStream}
 
 import org.change.parser.clickfile.ClickToAbstractNetwork
-import org.change.v2.analysis.processingmodels.State
+import org.change.v2.analysis.memory.State
 import org.change.v2.executor.clickabstractnetwork.ClickExecutionContext
 
 /**
@@ -28,7 +28,7 @@ object ARPQuerierRunner {
 
     val outputFileName = "arp-query.output"
     val output = new PrintStream(new FileOutputStream(new File(outputFileName)))
-    output.println(crtExecutor.stringifyStates())
+    output.println(crtExecutor.concretizeStates)
     output.close()
     println("Done. Output @ " + outputFileName)
   }

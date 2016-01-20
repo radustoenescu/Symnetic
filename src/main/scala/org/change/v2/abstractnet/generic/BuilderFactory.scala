@@ -1,6 +1,6 @@
 package org.change.v2.abstractnet.generic
 
-import org.change.v2.{ARPClassifier, ARPQuerier, ARPResponder, Template}
+import org.change.v2._
 import org.change.v2.abstractnet.click.sefl._
 
 object BuilderFactory {
@@ -47,6 +47,7 @@ object BuilderFactory {
     case "ARPResponder" => ARPResponder.getBuilder(nameValue)
     case "ARPQuerier" => ARPQuerier.getBuilder(nameValue)
     case "ARPClassifier" => ARPClassifier.getBuilder(nameValue)
+    case "CheckARPHeader" => CheckARPHeader.getBuilder(nameValue)
     case _ => NoOpClickElm.getBuilder(nameValue, elementType)
   }
   def getBuilder(elementType: String) = elementType match {
@@ -91,6 +92,7 @@ object BuilderFactory {
     case "ARPResponder" => ARPResponder.getBuilder
     case "ARPQuerier" => ARPQuerier.getBuilder
     case "ARPClassifier" => ARPClassifier.getBuilder
+    case "CheckARPHeader" => CheckARPHeader.getBuilder
     case _ => NoOpClickElm.getBuilder(elementType)
   }
 }

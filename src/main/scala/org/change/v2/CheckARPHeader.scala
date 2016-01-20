@@ -7,7 +7,7 @@ import org.change.v2.analysis.processingmodels.{Instruction, LocationId}
 import org.change.v2.util.canonicalnames._;
 
 
-class ARPClassifier(name: String,
+class CheckARPHeader(name: String,
                    elementType: String,
                    inputPorts: List[Port],
                    outputPorts: List[Port],
@@ -42,9 +42,12 @@ class ARPClassifier(name: String,
       InstructionBlock(
           // Checking that we have an arp packet
         If(Constrain(EtherType, :==:(ConstantValue(EtherProtoARP))),
-            Forward(outputPortName(0))
-          ),
-        Forward(outputPortName(1))
+            If(Constrain(ARPProtoSender, :|:(:==:(ConstantValue(EtherProtoIP)), :==:(ConstantValue(EtherProtoIPv6)))),
+              Forward(outputPortName(0)),
+              Forward(outputPortName(1))
+            ),
+            Forward(outputPortName(1))
+          )
       )
   )
 
@@ -53,28 +56,28 @@ class ARPClassifier(name: String,
   override def inputPortName(which: Int = 0): String = s"$name-$which-in"
 }
 
-class ARPClassifierElementBuilder(name: String, elementType: String)
+class CheckARPHeaderElementBuilder(name: String, elementType: String)
   extends ElementBuilder(name, elementType) {
 
   override def buildElement: GenericElement = {
-    new ARPClassifier(name, elementType, getInputPorts, getOutputPorts, getConfigParameters)
+    new CheckARPHeader(name, elementType, getInputPorts, getOutputPorts, getConfigParameters)
   }
 }
 
-object ARPClassifier {
+object CheckARPHeader {
   private var unnamedCount = 0
 
-  private val genericElementName = "arpclassifier"
+  private val genericElementName = "checkarpheader"
 
   private def increment {
     unnamedCount += 1
   }
 
-  def getBuilder(name: String): ARPClassifierElementBuilder = {
+  def getBuilder(name: String): CheckARPHeaderElementBuilder = {
     increment;
-    new ARPClassifierElementBuilder(name, "ARPClassifier")
+    new CheckARPHeaderElementBuilder(name, "CheckARPHeader")
   }
 
-  def getBuilder: ARPClassifierElementBuilder =
+  def getBuilder: CheckARPHeaderElementBuilder =
     getBuilder(s"$genericElementName-$unnamedCount")
 }

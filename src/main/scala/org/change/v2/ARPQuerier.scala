@@ -40,58 +40,65 @@ class ARPQuerier(name: String,
     * @return
     */
   val ARPL3 = -1000
+  val ARPL2 = ARPL3 - 144
+  def genCase(configParams: List[ConfigParameter]): InstructionBlock = {
+    var t = InstructionBlock(
+      CreateTag("L2", ARPL2),
+      Allocate(EtherDst, 48),
+      Assign(EtherDst, SymbolicValue()),
 
+      Allocate(EtherSrc, 48),
+      Assign(EtherSrc, SymbolicValue()),
+
+      Allocate(EtherType, 16),
+      Assign(EtherType, ConstantValue(EtherProtoARP)),
+
+      CreateTag("L3", ARPL3),
+      //L3
+      Allocate(ARPHWAddrSize, 8),
+      Assign(ARPHWAddrSize, ConstantValue(6)),
+
+      Allocate(ARPProtoAddrSize, 8),
+      Assign(ARPProtoAddrSize, ConstantValue(4)),
+
+      Allocate(ARPOpCode, 16),
+      Assign(ARPOpCode, ConstantValue(1)),
+
+      // This should be constant value
+      Allocate(ARPHWSender, 48),
+      Assign(ARPHWSender, SymbolicValue()),
+
+      // This should be fixed to IP value
+      Allocate(ARPProtoSender, 32),
+      Assign(ARPProtoSender, ConstantValue(EtherProtoIP)),
+
+      Allocate(ARPHWReceiver, 48),
+      Assign(ARPHWReceiver, :@(0+IPDstOffset)),
+
+      Allocate(ARPProtoReceiver, 32),
+      Assign(ARPProtoReceiver, SymbolicValue()),
+      Forward(outputPortName(0))
+    )
+     for (a <- configParams.grouped(2)) {
+       val ip = ipToNumber(a(0).value)
+       val mac = macToNumber(a(1).value)
+       t = InstructionBlock(
+         If(
+           Constrain(IPDst, :==:(ConstantValue(ip))),
+           InstructionBlock(
+             Assign(EtherDst, ConstantValue(mac)),
+             Forward(outputPortName(1))),
+           t
+         )
+       )
+
+     }
+    t
+  }
   override def instructions: Map[LocationId, Instruction] = Map(
     inputPortName(0) ->
       InstructionBlock(
-        List(
-
-          // Checking that we have an arp packet
-          Constrain(EtherType, :==:(ConstantValue(EtherProtoIP)))
-
-        ) ++
-          configParams.toVector.grouped(2).flatMap(x =>  {
-            val ip = ipToNumber(x(0).value)
-            val mac = macToNumber(x(1).value)
-            List(
-              If(
-                Constrain(IPDst, :==:(ConstantValue(ip))),
-                InstructionBlock(
-                  Assign(EtherDst, ConstantValue(mac)),
-                  Forward(outputPortName(0)))
-              )
-            )
-          }
-          ).toList
-          ++ List(
-          CreateTag("L3", ARPL3),
-          Assign(EtherType, ConstantValue(2054)), //ARP
-
-          //L3
-          Allocate(ARPHWAddrSize, 8),
-          Assign(ARPHWAddrSize, ConstantValue(6)),
-
-          Allocate(ARPProtoAddrSize, 8),
-          Assign(ARPProtoAddrSize, ConstantValue(4)),
-
-          Allocate(ARPOpCode, 16),
-          Assign(ARPOpCode, ConstantValue(1)),
-
-          // This should be constant value
-          Allocate(ARPHWSender, 48),
-          Assign(ARPHWSender, SymbolicValue()),
-
-          // This should be fixed to IP value
-          Allocate(ARPProtoSender, 32),
-          Assign(ARPProtoSender, ConstantValue(EtherProtoIP)),
-
-          Allocate(ARPHWReceiver, 48),
-          Assign(ARPHWReceiver, :@(0+IPDstOffset)),
-
-          Allocate(ARPProtoReceiver, 32),
-          Assign(ARPProtoReceiver, SymbolicValue()),
-          Forward(outputPortName(0))
-        )
+          genCase(configParams)
       ),
     inputPortName(1) ->
       InstructionBlock(
@@ -100,13 +107,17 @@ class ARPQuerier(name: String,
         // Check that this is an ARP Response
         Constrain(ARPOpCode, :==:(ConstantValue(ARPOpCodeResponse))),
         CreateTag("L3", 0),
-        Assign(EtherDst, :@(ARPL3 + 368))
+        CreateTag("L2", Tag("L3") - 144),
+        Assign(EtherDst, :@(ARPL3 + 368)),
+        Forward(outputPortName(1))
+
       )
 
 
   )
 
   override def outputPortName(which: Int = 0): String = s"$name-$which-out"
+  override def inputPortName(which: Int = 0): String = s"$name-$which-in"
 }
 
 class ARPQuerierElementBuilder(name: String, elementType: String)

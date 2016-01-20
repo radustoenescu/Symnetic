@@ -58,6 +58,18 @@ object State {
     Allocate(VLANTag,12),
     Assign(VLANTag,SymbolicValue())
   )
+
+  val etherarp = InstructionBlock(
+   CreateTag("L2", StartTag-144),
+   Allocate(EtherDst, 48),
+   Assign(EtherDst, SymbolicValue()),
+
+   Allocate(EtherSrc, 48),
+   Assign(EtherSrc, SymbolicValue()),
+
+   Allocate(EtherType, 16),
+   Assign(EtherType, ConstantValue(EtherProtoARP))
+ )
  private val ip = InstructionBlock(
    CreateTag("L3", StartTag + 0),
 
@@ -89,6 +101,32 @@ object State {
    Allocate(IPID, 16),
    Assign(IPID, SymbolicValue())
  )
+
+  private val arp = InstructionBlock(
+    CreateTag("L3", 0),
+    //L3
+    Allocate(ARPHWAddrSize, 8),
+    Assign(ARPHWAddrSize, ConstantValue(6)),
+
+    Allocate(ARPProtoAddrSize, 8),
+    Assign(ARPProtoAddrSize, ConstantValue(4)),
+
+    Allocate(ARPOpCode, 16),
+    Assign(ARPOpCode, SymbolicValue()),
+
+    Allocate(ARPHWSender, 48),
+    Assign(ARPHWSender, SymbolicValue()),
+
+    Allocate(ARPProtoSender, 32),
+    Assign(ARPProtoSender, SymbolicValue()),
+
+    Allocate(ARPHWReceiver, 48),
+    Assign(ARPHWReceiver, SymbolicValue()),
+
+    Allocate(ARPProtoReceiver, 32),
+    Assign(ARPProtoReceiver, SymbolicValue())
+  )
+
  private val transport = InstructionBlock(
    CreateTag("L4", L3Tag + 160),
 
@@ -144,6 +182,7 @@ object State {
  def bigBang: State = {
    val afterBigBang = InstructionBlock (
      start,
+     ehervlan,
      ip,
      transport,
      //CreateTag("PAYLOAD", :+:(L4Tag,:@(TcpDataOffset)),
@@ -154,4 +193,19 @@ object State {
 
    afterBigBang._1.head
  }
+  def bigBangARP: State = {
+    val afterBigBang = InstructionBlock (
+      start,
+      etherarp,
+      arp,
+      transport,
+      //CreateTag("PAYLOAD", :+:(L4Tag,:@(TcpDataOffset)),
+      //Allocate(Tag("PAYLOAD"),12000),
+      //Assign(Tag("PAYLOAD"),SymbolicValue()),
+      end
+    )(State(MemorySpace.clean), true)
+
+    afterBigBang._1.head
+  }
 }
+

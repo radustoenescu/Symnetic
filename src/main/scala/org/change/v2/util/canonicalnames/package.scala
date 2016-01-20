@@ -46,6 +46,7 @@ package object  canonicalnames {
   val EtherProtoIP = 2048
   val EtherProtoVLAN = 33024
   val EtherProtoARP = 2054
+  val EtherProtoIPv6 = 34525
 
   //IP Header offsets
   val IPVersionOffset = 0

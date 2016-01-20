@@ -39,42 +39,41 @@ class ARPResponder(name: String,
     * first parameter of this click element is an IPv4 address and converts it to a long value.
     * @return
     */
-
+  def genCase(configParams: List[ConfigParameter]) : InstructionBlock = {
+    var t = InstructionBlock(
+      Forward(outputPortName(0))
+    )
+    for (x <- configParams.grouped(2)) {
+      val ipAndMask = x(0).value.split("/")
+      val ip = ipAndMask(0)
+      val mask = ipAndMask(1)
+      val range = ipAndMaskToInterval(ip, mask)
+      val mac = macToNumber(x(1).value)
+      t = InstructionBlock(
+        If(
+          Constrain(ARPProtoReceiver, :&:(:>:(ConstantValue(range._1)), :<:(ConstantValue(range._2)))),
+          InstructionBlock(
+            Assign(ARPHWReceiver, ConstantValue(mac)),
+            // Setting the packet to be an arp reply
+            Assign(ARPOpCode, ConstantValue(ARPOpCodeResponse)),
+            Forward(outputPortName(1))
+          ),
+          t
+        )
+      )
+    }
+    t
+  }
 
   override def instructions: Map[LocationId, Instruction] = Map(
     inputPortName(0) ->
       InstructionBlock(
-        List(
-
-          // Checking that we have an arp packet
+              // Checking that we have an arp packet
           Constrain(EtherType, :==:(ConstantValue(EtherProtoARP))),
           // Check that this is an ARP Request
-          Constrain(ARPOpCode, :==:(ConstantValue(ARPOpCodeRequest)))
-
-        ) ++
-          configParams.toVector.grouped(2).flatMap(x =>  {
-            val ipAndMask = x(0).value.split("/")
-            val ip = ipAndMask(0)
-            val mask = ipAndMask(1)
-            val range = ipAndMaskToInterval(ip, mask)
-            val mac = macToNumber(x(1).value)
-            List(
-            If(
-              Constrain(ARPProtoReceiver, :&:(:>:(ConstantValue(range._1)), :<:(ConstantValue(range._2)))),
-              InstructionBlock(
-                Assign(ARPHWReceiver, ConstantValue(mac)),
-                // Setting the packet to be an arp reply
-                Assign(ARPOpCode, ConstantValue(ARPOpCodeResponse)),
-                Forward(outputPortName(1))
-              )
-            )
-          )}).toList
-          ++ List(
-          Forward(outputPortName(0))
-        )
+          Constrain(ARPOpCode, :==:(ConstantValue(ARPOpCodeRequest))),
+          genCase(configParams)
       )
-
-
   )
 
   override def outputPortName(which: Int = 0): String = s"$name-$which-out"
