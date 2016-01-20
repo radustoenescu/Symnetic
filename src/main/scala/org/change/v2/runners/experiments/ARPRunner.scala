@@ -3,9 +3,8 @@ package org.change.v2.runners.experiments
 import java.io.{File, FileOutputStream, PrintStream}
 
 import org.change.parser.clickfile.ClickToAbstractNetwork
-import org.change.v2.analysis.memory.State
 import org.change.v2.executor.clickabstractnetwork.ClickExecutionContext
-import org.change.v2.executor.clickabstractnetwork.executionlogging.{OldStringifier, JsonLogger, ModelValidation}
+import org.change.v2.executor.clickabstractnetwork.executionlogging.JsonLogger
 
 /**
  * Author: Alexandru Tudorica
