@@ -11,7 +11,7 @@ import org.change.v2.util.conversion.RepresentationConversion._
 import org.change.v2.util.canonicalnames._;
 
 
-class ARPResponder(name: String,
+class ARPClassifier(name: String,
                    elementType: String,
                    inputPorts: List[Port],
                    outputPorts: List[Port],
@@ -47,30 +47,10 @@ class ARPResponder(name: String,
         List(
 
           // Checking that we have an arp packet
-          Constrain(EtherType, :==:(ConstantValue(EtherProtoARP))),
-          // Check that this is an ARP Request
-          Constrain(ARPOpCode, :==:(ConstantValue(ARPOpCodeRequest)))
-
-        ) ++
-          configParams.toVector.grouped(2).flatMap(x =>  {
-            val ipAndMask = x(0).value.split("/")
-            val ip = ipAndMask(0)
-            val mask = ipAndMask(1)
-            val range = ipAndMaskToInterval(ip, mask)
-            val mac = macToNumber(x(1).value)
-            List(
-            If(
-              Constrain(ARPProtoReceiver, :&:(:>:(ConstantValue(range._1)), :<:(ConstantValue(range._2)))),
-              InstructionBlock(
-                Assign(ARPHWReceiver, ConstantValue(mac)),
-                // Setting the packet to be an arp reply
-                Assign(ARPOpCode, ConstantValue(ARPOpCodeResponse)),
-                Forward(outputPortName(1))
-              )
-            )
-          )}).toList
-          ++ List(
-          Forward(outputPortName(0))
+          If(Constrain(EtherType, :==: (ConstantValue(2054))),
+            Forward(outputPortName(0))
+          ),
+          Forward(outputPortName(1))
         )
       )
 
@@ -80,28 +60,28 @@ class ARPResponder(name: String,
   override def outputPortName(which: Int = 0): String = s"$name-$which-out"
 }
 
-class ARPResponderElementBuilder(name: String, elementType: String)
+class ARPClassifierElementBuilder(name: String, elementType: String)
   extends ElementBuilder(name, elementType) {
 
   override def buildElement: GenericElement = {
-    new ARPResponder(name, elementType, getInputPorts, getOutputPorts, getConfigParameters)
+    new ARPClassifier(name, elementType, getInputPorts, getOutputPorts, getConfigParameters)
   }
 }
 
-object ARPResponder {
+object ARPClassifier {
   private var unnamedCount = 0
 
-  private val genericElementName = "arpresponder"
+  private val genericElementName = "arpclassifier"
 
   private def increment {
     unnamedCount += 1
   }
 
-  def getBuilder(name: String): ARPResponderElementBuilder = {
+  def getBuilder(name: String): ARPClassifierElementBuilder = {
     increment;
-    new ARPResponderElementBuilder(name, "ARPResponder")
+    new ARPClassifierElementBuilder(name, "ARPClassifier")
   }
 
-  def getBuilder: ARPResponderElementBuilder =
+  def getBuilder: ARPClassifierElementBuilder =
     getBuilder(s"$genericElementName-$unnamedCount")
 }

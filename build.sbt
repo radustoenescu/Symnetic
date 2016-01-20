@@ -25,9 +25,17 @@ lazy val click = taskKey[Unit]("Symbolically running Template.click")
 
 fullRunTask(click, Compile, "org.change.v2.runners.experiments.TemplateRunner")
 
-lazy val arp = taskKey[Unit]("Symbolically running Arp.click")
+lazy val arp = taskKey[Unit]("Symbolically running ARP.click")
 
-fullRunTask(arp, Compile, "org.change.v2.runners.experiments.ARPResponderRunner")
+fullRunTask(arp, Compile, "org.change.v2.runners.experiments.ARPRunner")
+
+lazy val arpResponder = taskKey[Unit]("Symbolically running ARPResponder.click")
+
+fullRunTask(arpResponder, Compile, "org.change.v2.runners.experiments.ARPResponderRunner")
+
+lazy val arpQuerier = taskKey[Unit]("Symbolically running ARPQuerier.click")
+
+fullRunTask(arpQuerier, Compile, "org.change.v2.runners.experiments.ARPQuerierRunner")
 
 lazy val click_exampl = taskKey[Unit]("Symbolically running TemplateExampl.click with example generation")
 

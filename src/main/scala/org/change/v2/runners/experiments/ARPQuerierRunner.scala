@@ -9,12 +9,13 @@ import org.change.v2.executor.clickabstractnetwork.ClickExecutionContext
 /**
  * Author: Alexandru Tudorica
  */
-object ARPResponderRunner {
+object ARPQuerierRunner {
 
   def main (args: Array[String]) {
-    val clickConfig = "src/main/resources/click_test_files/ARPResponder.click"
+    val clickConfig = "src/main/resources/click_test_files/ARPQuerier.click"
     val absNet = ClickToAbstractNetwork.buildConfig(clickConfig)
     val executor = ClickExecutionContext.fromSingle(absNet, initialIsClean = false, initialState = State.bigBangARP)
+
 
     println(
       executor.instructions.mkString("\n")
@@ -25,7 +26,7 @@ object ARPResponderRunner {
       crtExecutor = crtExecutor.execute(verbose = true)
     }
 
-    val outputFileName = "arp-responder.output"
+    val outputFileName = "arp-query.output"
     val output = new PrintStream(new FileOutputStream(new File(outputFileName)))
     output.println(crtExecutor.stringifyStates())
     output.close()

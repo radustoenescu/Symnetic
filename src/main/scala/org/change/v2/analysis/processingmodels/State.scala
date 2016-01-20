@@ -59,59 +59,59 @@ object State {
      Allocate(IPDst, 32),
      Assign(IPDst, SymbolicValue()),
 
-     Allocate(TTL, 8),
-     Assign(TTL, ConstantValue(255)),
-
-     Allocate(IPLength, 16),
-     Assign(IPLength, SymbolicValue()),
-
-     Allocate(IPHeaderLength, 4),
-     Assign(IPHeaderLength, SymbolicValue()),
-
-     Allocate(HeaderChecksum,16),
-     Assign(HeaderChecksum, SymbolicValue()),
-
-     Allocate(IPID, 16),
-     Assign(IPID, SymbolicValue()),
+//     Allocate(TTL, 8),
+//     Assign(TTL, ConstantValue(255)),
+//
+//     Allocate(IPLength, 16),
+//     Assign(IPLength, SymbolicValue()),
+//
+//     Allocate(IPHeaderLength, 4),
+//     Assign(IPHeaderLength, SymbolicValue()),
+//
+//     Allocate(HeaderChecksum,16),
+//     Assign(HeaderChecksum, SymbolicValue()),
+//
+//     Allocate(IPID, 16),
+//     Assign(IPID, SymbolicValue()),
 
      CreateTag("L4", L3Tag + 160),
-
-     Allocate(TcpSrc, 16),
-     Assign(TcpSrc, SymbolicValue()),
-
-     Allocate(TcpDst, 16),
-     Assign(TcpDst, SymbolicValue()),
-
-     Allocate(TcpSeq, 32),
-     Assign(TcpSeq, SymbolicValue()),
-
-     Allocate(TcpAck, 32),
-     Assign(TcpAck, SymbolicValue()),
-
-     Allocate(TcpDataOffset, 4),
-     Assign(TcpDataOffset, ConstantValue(160)),
-
-     Allocate(TcpReserved,3),
-     Assign(TcpReserved,SymbolicValue()),
-
-     Allocate(TcpFlagNS,1),
-     Assign(TcpFlagNS,ConstantValue(0)),
-     Allocate(TcpFlagCWR,1),
-     Assign(TcpFlagCWR,ConstantValue(0)),
-     Allocate(TcpFlagECE,1),
-     Assign(TcpFlagECE,ConstantValue(0)),
-     Allocate(TcpFlagURG,1),
-     Assign(TcpFlagURG,ConstantValue(0)),
-     Allocate(TcpFlagACK,1),
-     Assign(TcpFlagACK,SymbolicValue()),
-     Allocate(TcpFlagACK,1),
-     Assign(TcpFlagACK,SymbolicValue()),
-     Allocate(TcpFlagSYN,1),
-     Assign(TcpFlagSYN,SymbolicValue()),
-     Allocate(TcpFlagRST,1),
-     Assign(TcpFlagRST,ConstantValue(0)),
-     Allocate(TcpFlagPSH,1),
-     Assign(TcpFlagPSH,ConstantValue(0)),
+//
+//     Allocate(TcpSrc, 16),
+//     Assign(TcpSrc, SymbolicValue()),
+//
+//     Allocate(TcpDst, 16),
+//     Assign(TcpDst, SymbolicValue()),
+//
+//     Allocate(TcpSeq, 32),
+//     Assign(TcpSeq, SymbolicValue()),
+//
+//     Allocate(TcpAck, 32),
+//     Assign(TcpAck, SymbolicValue()),
+//
+//     Allocate(TcpDataOffset, 4),
+//     Assign(TcpDataOffset, ConstantValue(160)),
+//
+//     Allocate(TcpReserved,3),
+//     Assign(TcpReserved,SymbolicValue()),
+//
+//     Allocate(TcpFlagNS,1),
+//     Assign(TcpFlagNS,ConstantValue(0)),
+//     Allocate(TcpFlagCWR,1),
+//     Assign(TcpFlagCWR,ConstantValue(0)),
+//     Allocate(TcpFlagECE,1),
+//     Assign(TcpFlagECE,ConstantValue(0)),
+//     Allocate(TcpFlagURG,1),
+//     Assign(TcpFlagURG,ConstantValue(0)),
+//     Allocate(TcpFlagACK,1),
+//     Assign(TcpFlagACK,SymbolicValue()),
+//     Allocate(TcpFlagACK,1),
+//     Assign(TcpFlagACK,SymbolicValue()),
+//     Allocate(TcpFlagSYN,1),
+//     Assign(TcpFlagSYN,SymbolicValue()),
+//     Allocate(TcpFlagRST,1),
+//     Assign(TcpFlagRST,ConstantValue(0)),
+//     Allocate(TcpFlagPSH,1),
+//     Assign(TcpFlagPSH,ConstantValue(0)),
 
      //CreateTag("PAYLOAD", :+:(L4Tag,:@(TcpDataOffset)),
      //Allocate(Tag("PAYLOAD"),12000),
@@ -119,6 +119,52 @@ object State {
      CreateTag("END", L4Tag + 12000)
    )(bigBang, true)
 
-   afterBigBang._1.head
- }
+  afterBigBang._1.head
+  }
+
+  def bigBangARP: State = {
+    val bigBang = State(MemorySpace.clean)
+
+    val afterBigBang = InstructionBlock (
+      CreateTag("START",0),
+      CreateTag("L2", -144),
+      CreateTag("L3", 0),
+
+      //L2
+      Allocate(EtherDst, 48),
+      Assign(EtherDst, SymbolicValue()),
+
+      Allocate(EtherSrc, 48),
+      Assign(EtherSrc, SymbolicValue()),
+
+      Allocate(EtherType, 16),
+      Assign(EtherType, ConstantValue(2054)), //ARP
+
+      //L3
+      Allocate(ARPHWAddrSize, 8),
+      Assign(ARPHWAddrSize, ConstantValue(6)),
+
+      Allocate(ARPProtoAddrSize, 8),
+      Assign(ARPProtoAddrSize, ConstantValue(4)),
+
+      Allocate(ARPOpCode, 16),
+      Assign(ARPOpCode, SymbolicValue()),
+
+      Allocate(ARPHWSender, 48),
+      Assign(ARPHWSender, SymbolicValue()),
+
+      Allocate(ARPProtoSender, 32),
+      Assign(ARPProtoSender, SymbolicValue()),
+
+      Allocate(ARPHWReceiver, 48),
+      Assign(ARPHWReceiver, SymbolicValue()),
+
+      Allocate(ARPProtoReceiver, 32),
+      Assign(ARPProtoReceiver, SymbolicValue())
+
+    )(bigBang, true)
+
+    afterBigBang._1.head
+  }
+
 }

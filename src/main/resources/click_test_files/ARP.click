@@ -1,1 +1,11 @@
-FromDevice() -> t  :: ARPResponder(127.0.0.1, 255.255.255.0, aa:aa:aa:aa:aa:aa, 192.168.0.0, 255.255.0.0, bb:bb:bb:bb:bb:bb,  192.168.0.0, 255.255.0.0, bb:bb:bb:bb:bb:bb) -> ToDevice()
+src :: FromDevice()
+dst :: ToDevice()
+
+q :: ARPQuerier(10.0.0.1, aa:aa:aa:aa:aa:aa)
+r :: ARPResponder(10.0.0.2/24, aa:aa:aa:aa:aa:ab)
+c :: ARPClassifier()
+
+src -> q -> c -> r -> dst
+c[1] -> dst
+r[1] -> q[1]
+

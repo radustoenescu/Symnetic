@@ -11,7 +11,7 @@ import org.change.v2.util.conversion.RepresentationConversion._
 import org.change.v2.util.canonicalnames._;
 
 
-class ARPResponder(name: String,
+class ARPQuerier(name: String,
                    elementType: String,
                    inputPorts: List[Port],
                    outputPorts: List[Port],
@@ -39,7 +39,7 @@ class ARPResponder(name: String,
     * first parameter of this click element is an IPv4 address and converts it to a long value.
     * @return
     */
-
+  val ARPL3 = -1000
 
   override def instructions: Map[LocationId, Instruction] = Map(
     inputPortName(0) ->
@@ -47,31 +47,60 @@ class ARPResponder(name: String,
         List(
 
           // Checking that we have an arp packet
-          Constrain(EtherType, :==:(ConstantValue(EtherProtoARP))),
-          // Check that this is an ARP Request
-          Constrain(ARPOpCode, :==:(ConstantValue(ARPOpCodeRequest)))
+          Constrain(EtherType, :==:(ConstantValue(EtherProtoIP)))
 
         ) ++
           configParams.toVector.grouped(2).flatMap(x =>  {
-            val ipAndMask = x(0).value.split("/")
-            val ip = ipAndMask(0)
-            val mask = ipAndMask(1)
-            val range = ipAndMaskToInterval(ip, mask)
+            val ip = ipToNumber(x(0).value)
             val mac = macToNumber(x(1).value)
             List(
-            If(
-              Constrain(ARPProtoReceiver, :&:(:>:(ConstantValue(range._1)), :<:(ConstantValue(range._2)))),
-              InstructionBlock(
-                Assign(ARPHWReceiver, ConstantValue(mac)),
-                // Setting the packet to be an arp reply
-                Assign(ARPOpCode, ConstantValue(ARPOpCodeResponse)),
-                Forward(outputPortName(1))
+              If(
+                Constrain(IPDst, :==:(ConstantValue(ip))),
+                InstructionBlock(
+                  Assign(EtherDst, ConstantValue(mac)),
+                  Forward(outputPortName(0)))
               )
             )
-          )}).toList
+          }
+          ).toList
           ++ List(
+          CreateTag("L3", ARPL3),
+          Assign(EtherType, ConstantValue(2054)), //ARP
+
+          //L3
+          Allocate(ARPHWAddrSize, 8),
+          Assign(ARPHWAddrSize, ConstantValue(6)),
+
+          Allocate(ARPProtoAddrSize, 8),
+          Assign(ARPProtoAddrSize, ConstantValue(4)),
+
+          Allocate(ARPOpCode, 16),
+          Assign(ARPOpCode, ConstantValue(1)),
+
+          // This should be constant value
+          Allocate(ARPHWSender, 48),
+          Assign(ARPHWSender, SymbolicValue()),
+
+          // This should be fixed to IP value
+          Allocate(ARPProtoSender, 32),
+          Assign(ARPProtoSender, ConstantValue(EtherProtoIP)),
+
+          Allocate(ARPHWReceiver, 48),
+          Assign(ARPHWReceiver, :@(0+IPDstOffset)),
+
+          Allocate(ARPProtoReceiver, 32),
+          Assign(ARPProtoReceiver, SymbolicValue()),
           Forward(outputPortName(0))
         )
+      ),
+    inputPortName(1) ->
+      InstructionBlock(
+        // Checking that we have an arp packet
+        Constrain(EtherType, :==:(ConstantValue(EtherProtoARP))),
+        // Check that this is an ARP Response
+        Constrain(ARPOpCode, :==:(ConstantValue(ARPOpCodeResponse))),
+        CreateTag("L3", 0),
+        Assign(EtherDst, :@(ARPL3 + 368))
       )
 
 
@@ -80,28 +109,28 @@ class ARPResponder(name: String,
   override def outputPortName(which: Int = 0): String = s"$name-$which-out"
 }
 
-class ARPResponderElementBuilder(name: String, elementType: String)
+class ARPQuerierElementBuilder(name: String, elementType: String)
   extends ElementBuilder(name, elementType) {
 
   override def buildElement: GenericElement = {
-    new ARPResponder(name, elementType, getInputPorts, getOutputPorts, getConfigParameters)
+    new ARPQuerier(name, elementType, getInputPorts, getOutputPorts, getConfigParameters)
   }
 }
 
-object ARPResponder {
+object ARPQuerier {
   private var unnamedCount = 0
 
-  private val genericElementName = "arpresponder"
+  private val genericElementName = "arpquerier"
 
   private def increment {
     unnamedCount += 1
   }
 
-  def getBuilder(name: String): ARPResponderElementBuilder = {
+  def getBuilder(name: String): ARPQuerierElementBuilder = {
     increment;
-    new ARPResponderElementBuilder(name, "ARPResponder")
+    new ARPQuerierElementBuilder(name, "ARPQuerier")
   }
 
-  def getBuilder: ARPResponderElementBuilder =
+  def getBuilder: ARPQuerierElementBuilder =
     getBuilder(s"$genericElementName-$unnamedCount")
 }
