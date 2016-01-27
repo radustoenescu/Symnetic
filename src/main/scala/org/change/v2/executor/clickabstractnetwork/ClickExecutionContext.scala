@@ -120,7 +120,8 @@ object ClickExecutionContext {
   def fromSingle( networkModel: NetworkConfig,
                   verificationConditions: List[List[Rule]] = Nil,
                   includeInitial: Boolean = true,
-                  initialIsClean: Boolean = false): ClickExecutionContext = {
+                  initialIsClean: Boolean = false,
+                  initialState: State = State.bigBang): ClickExecutionContext = {
     // Collect instructions for every element.
     val instructions = networkModel.elements.values.foldLeft(Map[LocationId, Instruction]())(_ ++ _.instructions)
     // Collect check instructions corresponding to network rules.
@@ -138,7 +139,7 @@ object ClickExecutionContext {
       if (initialIsClean)
         List(State.clean.forwardTo(networkModel.entryLocationId))
       else
-        List(State.bigBang.forwardTo(networkModel.entryLocationId))
+        List(initialState.forwardTo(networkModel.entryLocationId))
     } else Nil
 
     new ClickExecutionContext(instructions, links, initialStates, Nil, Nil, checkInstructions)

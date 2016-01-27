@@ -45,6 +45,8 @@ package object  canonicalnames {
   // TODO: Dunno what is the desc for these
   val EtherProtoIP = 2048
   val EtherProtoVLAN = 33024
+  val EtherProtoARP = 2054
+  val EtherProtoIPv6 = 34525
 
   //IP Header offsets
   val IPVersionOffset = 0
@@ -153,5 +155,7 @@ package object  canonicalnames {
   val ARPHWReceiver = L3Tag + 368
   val ARPProtoReceiver = L3Tag + 416
 
+  val ARPOpCodeRequest = 1
+  val ARPOpCodeResponse = 2
   val MinPacketSize = 64
 }

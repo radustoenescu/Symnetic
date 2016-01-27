@@ -64,14 +64,14 @@ class TagTests extends FlatSpec with Matchers{
     val s = State.bigBang
 
     val finalState = InstructionBlock (
-      CreateTag("L3", -100),
+      CreateTag("L3", -200),
       Allocate(L3Tag+20, 10),
       Assign(L3Tag+20, SymbolicValue()),
       CreateTag("L4", L3Tag+20),
       Assign("VAL", :@(L4Tag))
     )(s)
 
-    finalState._1.head.memory.eval("VAL").get.e.id should be (finalState._1.head.memory.eval(-80).get.e.id)
+    finalState._1.head.memory.eval("VAL").get.e.id should be (finalState._1.head.memory.eval(-180).get.e.id)
   }
 
 }

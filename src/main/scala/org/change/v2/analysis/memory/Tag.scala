@@ -14,7 +14,11 @@ case class Tag(val name: String) extends Intable {
   def -(other: TagExp): TagExp = TagExp(other.plusTags, this :: other.minusTags , other.rest)
   def -(other: Int): TagExp = TagExp(List(this), Nil , -other)
 
-  override def apply(v1: State): Option[Int] = v1.memory.memTags.get(name)
+  override def apply(v1: State): Option[Int] = {
+    val x = v1.memory.memTags.get(name)
+    println(x)
+    x
+  }
 
   override def toString = name
 }
