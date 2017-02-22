@@ -17,6 +17,7 @@ libraryDependencies ++= {
   )
 }
 
+test in assembly := {}
 
 lazy val p4control = taskKey[Unit]("P4 control function to SEFL")
 
@@ -30,13 +31,21 @@ lazy val click = taskKey[Unit]("Symbolically running Template.click")
 
 fullRunTask(click, Compile, "org.change.v2.runners.experiments.TemplateRunner")
 
-lazy val click_exampl = taskKey[Unit]("Symbolically running TemplateExampl.click with example generation")
+lazy val symb = taskKey[Unit]("Symbolically running Template.click without validation")
 
-fullRunTask(click_exampl, Compile, "org.change.v2.runners.experiments.TemplateRunnerWithExamples")
+fullRunTask(symb, Compile, "org.change.v2.runners.experiments.TemplateRunnerWithoutValidation")
 
 lazy val mc = taskKey[Unit]("Running multiple VMs")
 
 fullRunTask(mc, Compile, "org.change.v2.runners.experiments.MultipleVms")
+
+lazy val switch_bench = taskKey[Unit]("Switch Bench")
+
+fullRunTask(switch_bench, Compile, "org.change.v2.runners.experiments.ciscoswitchtest.CiscoSwitchTestBench")
+
+lazy val policy = taskKey[Unit]("Policy testing")
+
+fullRunTask(policy, Compile, "org.change.v2.verification.Test")
 
 lazy val sefl = taskKey[Unit]("SEFL execution")
 
