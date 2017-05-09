@@ -129,4 +129,3 @@ case class NOT(constraint: Constraint) extends Constraint {
     Z3Util.z3Context.mkNot(constraint.z3Constrain(subject))
   override def toString = s"~($constraint)"
 }
-

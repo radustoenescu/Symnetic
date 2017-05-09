@@ -206,24 +206,41 @@ table_actions : action_specification | action_profile_specification ;
 action_profile_specification : 'action_profile' ':' action_profile_name ;
 control_function_declaration : 'control' control_fn_name control_block ;
 control_fn_name : NAME;
+
 control_block : '{' control_statement* '}' ;
+
 control_statement : apply_table_call | apply_and_select_block | if_else_statement | control_fn_name '(' ')' ';' ;
 
 apply_table_call : 'apply' '(' table_name ')' ';' ;
 
 apply_and_select_block : 'apply' '(' table_name ')' '{' ( case_list )? '}' ;
-case_list : action_case+ | hit_miss_case+ ;
+
+case_list : action_case+ # case_list_action
+	  | hit_miss_case+  # case_list_hitmiss;
+	  
 action_case : action_or_default control_block ;
 action_or_default : action_name | 'default' ;
 hit_miss_case : hit_or_miss control_block ;
 hit_or_miss : 'hit' | 'miss' ;
 
 if_else_statement : 'if' '(' bool_expr ')' control_block ( else_block )? ;
-else_block : 'else' control_block | 'else' if_else_statement ;
-bool_expr : 'valid' '(' header_ref ')' | bool_expr bool_op bool_expr |
-    'not' bool_expr | '(' bool_expr ')' | exp rel_op exp | 'true' | 'false' ;
 
-exp : exp bin_op exp | un_op exp | field_ref | value | '(' exp ')' ;
+else_block : 'else' control_block
+	   | 'else' if_else_statement ;
+
+bool_expr : 'valid' '(' header_ref ')' # valid_bool_expr
+	  | bool_expr bool_op bool_expr # compound_bool_expr
+	  | 'not' bool_expr # negated_bool_expr
+	  | '(' bool_expr ')' # par_bool_expr
+	  | exp rel_op exp # relop_bool_expr
+	  | 'true' # const_bool
+	  | 'false' # const_bool;
+
+exp : exp bin_op exp # compound_exp
+      | un_op exp # unary_exp
+      | field_ref # field_red_exp
+      | value # value_exp
+      | '(' exp ')' # par_exp ;
 
 //TODO: This is an assumption too
 value   : const_value ;
@@ -233,4 +250,19 @@ un_op : '~' | '-' ;
 bool_op : 'or' | 'and' ;
 rel_op : '>' | '>=' | '==' | '<=' | '<' | '!=' ;
 
-NAME : [a-zA-Z][0-9a-zA-Z]* ;
+NAME : [a-zA-Z_][_0-9a-zA-Z]* ;
+
+/* We're going to ignore all white space characters */
+WS
+    :   (' ' | '\t' | '\r'| '\n') -> skip
+        ;
+
+
+Comment
+    : '//' ~( '\r' | '\n' )* -> skip
+        ;
+
+comment
+    : Comment
+        ;
+	

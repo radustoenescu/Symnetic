@@ -1,7 +1,7 @@
 package org.change.parser.p4control
 
 import java.io.{FileInputStream, File, InputStream}
-import generated.p4control.{P4Parser, P4Lexer}
+import generated.p4control.{P4GrammarParser, P4GrammarLexer}
 import org.change.v2.abstractnet.generic.NetworkConfigBuilder
 import org.antlr.v4.runtime.{CommonTokenStream, ANTLRInputStream}
 import org.antlr.v4.runtime.tree.{ParseTreeWalker, ParseTree}
@@ -20,11 +20,11 @@ object P4ToAbstractNetwork {
    */
   def buildConfig(input: InputStream, configId: String): NetworkConfig = {
     val parserInput = new ANTLRInputStream(input)
-    val lexer: P4Lexer = new P4Lexer(parserInput)
+    val lexer: P4GrammarLexer = new P4GrammarLexer(parserInput)
     val tokens: CommonTokenStream = new CommonTokenStream(lexer)
-    val parser: P4Parser = new P4Parser(tokens)
+    val parser: P4GrammarParser = new P4GrammarParser(tokens)
 
-    val tree: ParseTree = parser.p4
+    val tree: ParseTree = parser.p4_program
 
     val walker = new ParseTreeWalker
     val newConfig = new P4NetworkConfigBuilder(Some(configId))

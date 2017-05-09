@@ -21,7 +21,15 @@ test in assembly := {}
 
 lazy val p4control = taskKey[Unit]("P4 control function to SEFL")
 
-fullRunTask(p4control, Compile, "org.change.v2.runners.experiments.P4ControlRunner")
+
+//fullRunTask(p4control, Compile, "org.change.v2.runners.experiments.P4ControlRunner")
+p4control := {
+  val file = Option(System.getProperty("file")).getOrElse("/Users/localadmin/poli/symnet-paper/code/Symnetic/src/main/resources/p4_test_files/control.p4")
+  val r = (runner in Compile).value
+  //val cp: Seq[File] = (dependencyClasspath in Compile).value.files
+  val cp = (fullClasspath in Compile).value.files
+  toError(r.run("org.change.v2.runners.experiments.P4ControlRunner", cp, Seq(file), streams.value.log))
+}
 
 lazy val sample = taskKey[Unit]("Interpreting")
 

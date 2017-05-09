@@ -1,7 +1,6 @@
 // The ingress control function
 control ingress {
-    // Verify mTag state and port are consistent
-    apply(check_mtag);//forward to table input port, create a single port to receive all output
+    apply(check_mtag);
     apply(identify_port);
     apply(select_output_port);
 
@@ -12,18 +11,19 @@ control ingress {
     }
 
     apply(routing_table) { // Create one port for each action, one for default. 
-    ipv4_route_action { // IPv4 action was used
-        apply(v4_rpf);
+     ipv4_route_action { // IPv4 action was used
+        apply(v4_rpf);	 
         apply(v4_acl);
-    }
-    ipv6_route_action { // IPv6 action was used
+     }
+     ipv6_route_action { // IPv6 action was used
         apply(v6_option_check);
         apply(v6_option_acl);
-    }
-    default {
-    	    if (standard_metadata.ingress_port == 1) {
+     }
+     default {
+    	    if (standard_metadata.ingress_port != 1) {
 	       apply(cpu_ingress_check);
 	    }    
+     }
     }
-    }
+    egress();
 }
