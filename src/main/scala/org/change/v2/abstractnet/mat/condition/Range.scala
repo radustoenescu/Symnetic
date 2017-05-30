@@ -11,8 +11,8 @@ case class Range(lower: Long, upper: Long) extends Condition {
   override def compare(other: Condition): Relation = other match {
     case Range(otherLower, otherUpper) => {
       (CompareResult(lower, otherLower), CompareResult(upper, otherUpper)) match {
-        case (GT, LT) => Sub
-        case (LT, GT) => Super
+        case (GT, LT) | (EQ, LT) | (GT, EQ) => Sub
+        case (LT, GT) | (LT, EQ) | (EQ,GT) => Super
         case (EQ, EQ) => Same
         case _ => (CompareResult(lower, otherUpper), CompareResult(upper, otherLower)) match {
           case (GT, _) | (_, LT) => Disjoint

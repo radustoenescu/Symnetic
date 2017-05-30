@@ -17,6 +17,24 @@ case class Node[T <: Condition](
   def height: Int = 1 + Node.forestHeight(children)
   def avgHeight: Double = 1 + Node.avgForestHeight(children)
   def totalConstraintNumber: Long = children.length + lateral.length
+  def isValid(conditions: Seq[T]): Boolean = {
+    val overlappingRanges = conditions.filter(_.compare(condition) match {
+      case Sub | Intersect => true
+      case _ => false
+    })
+
+    val res =overlappingRanges.forall { r =>
+      (children ++ lateral).exists { n =>
+        n.condition.compare(r) match {
+          case Same | Super => true
+          case _ => false
+        }
+      }
+    }
+
+    if (res) Node.validateConditionSet(children,conditions)
+    else false
+  }
 }
 
 object Node {
@@ -34,6 +52,9 @@ object Node {
   def forestHeight[T <: Condition](forest: Forest[T]): Int = if (forest.nonEmpty) forest.map(_.height).max else 0
   def avgForestHeight[T <: Condition](forest: Forest[T]): Double = forest.map(_.height).sum / forest.length.toDouble
   def totalConstraintNumber[T <: Condition](forest: Forest[T]): Long = forest.map(_.totalConstraintNumber).sum
+
+  def validateConditionSet[T <: Condition](forest: Forest[T], conditions: Seq[T]): Boolean =
+    forest.forall(_.isValid(conditions))
 
   def makeForest[T <: Condition](conditions: Seq[T]): Forest[T] = {
     // TODO: Assert it is sorted properly
